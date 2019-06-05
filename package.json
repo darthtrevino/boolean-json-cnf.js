@@ -24,6 +24,6 @@
   "repository": "kemitchell/boolean-json-cnf.js",
   "scripts": {
     "lint": "standard",
-    "test": "jest index.js --coverage"
+    "test": "jest test.js --coverage"
   }
 }
