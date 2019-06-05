@@ -1,6 +1,6 @@
-var bifurcate = require('boolean-json-bifurcate')
+var bifurcate = require("boolean-json-bifurcate");
 
-module.exports = function booleanJSONCNF (expression) {
+module.exports = function booleanJSONCNF(expression) {
   // Since boolean-json-schama@3.0.0, conjunctions and disjunctions can
   // contain more than two operands. This makes entering data more
   // user-friendly.
@@ -16,122 +16,101 @@ module.exports = function booleanJSONCNF (expression) {
   //
   // For example, bifurcation converts `{ or: [ 'p', 'q', 'r' ] }`
   // to `{ or: [ 'p', { or: [ 'q', 'r' ] } ] }`.
-  return normalize(bifurcate(expression))
-}
+  return normalize(bifurcate(expression));
+};
 
-function normalize (expression) {
-  var p, q, r
+function normalize(expression) {
+  var p, q, r;
 
   // De Morgan's Laws
 
   // Negation of a Disjunction
   // ¬(p ∨ q) ⇔ (p ∧ q)
   if (
-    negation(expression) &&
-    !variable(expression.not) &&
-    disjunction(expression.not)
+    isNegation(expression) &&
+    !isVariable(expression.not) &&
+    isDisjunction(expression.not)
   ) {
-    p = normalize(expression.not.or[0])
-    q = normalize(expression.not.or[1])
+    p = normalize(expression.not.or[0]);
+    q = normalize(expression.not.or[1]);
     return {
-      and: [
-        normalize({not: p}),
-        normalize({not: q})
-      ]
-    }
+      and: [normalize({ not: p }), normalize({ not: q })]
+    };
 
-  // Negation of a Conjunction
-  // ¬(p ∧ q) ⇔ (p ∨ q)
+    // Negation of a Conjunction
+    // ¬(p ∧ q) ⇔ (p ∨ q)
   } else if (
-    negation(expression) &&
-    !variable(expression.not) &&
-    conjunction(expression.not)
+    isNegation(expression) &&
+    !isVariable(expression.not) &&
+    isConjunction(expression.not)
   ) {
-    p = normalize(expression.not.and[0])
-    q = normalize(expression.not.and[1])
+    p = normalize(expression.not.and[0]);
+    q = normalize(expression.not.and[1]);
     return {
-      or: [
-        normalize({not: p}),
-        normalize({not: q})
-      ]
-    }
+      or: [normalize({ not: p }), normalize({ not: q })]
+    };
 
-  // Double Negation
-  // (¬¬p) ⇔ (p)
+    // Double Negation
+    // (¬¬p) ⇔ (p)
   } else if (
-    negation(expression) &&
-    !variable(expression.not) &&
-    negation(expression.not)
+    isNegation(expression) &&
+    !isVariable(expression.not) &&
+    isNegation(expression.not)
   ) {
-    return normalize(expression.not.not)
+    return normalize(expression.not.not);
 
-  // Distribution of Disjunction Over Conjunction
+    // Distribution of Disjunction Over Conjunction
 
-  // Conjunction First
-  // ((q ∧ r) ∨ p) ⇔ ((p ∨ q) ∧ (p ∨ r))
+    // Conjunction First
+    // ((q ∧ r) ∨ p) ⇔ ((p ∨ q) ∧ (p ∨ r))
   } else if (
-    disjunction(expression) &&
-    !variable(expression.or[0]) &&
-    conjunction(expression.or[0])
+    isDisjunction(expression) &&
+    !isVariable(expression.or[0]) &&
+    isConjunction(expression.or[0])
   ) {
-    p = normalize(expression.or[1])
-    q = normalize(expression.or[0].and[0])
-    r = normalize(expression.or[0].and[1])
+    p = normalize(expression.or[1]);
+    q = normalize(expression.or[0].and[0]);
+    r = normalize(expression.or[0].and[1]);
     return {
-      and: [
-        normalize({or: [p, q]}),
-        normalize({or: [p, r]})
-      ]
-    }
+      and: [normalize({ or: [p, q] }), normalize({ or: [p, r] })]
+    };
 
-  // Conjunction Second
-  // (p ∨ (q ∧ r)) ⇔ ((p ∨ q) ∧ (p ∨ r))
+    // Conjunction Second
+    // (p ∨ (q ∧ r)) ⇔ ((p ∨ q) ∧ (p ∨ r))
   } else if (
-    disjunction(expression) &&
-    !variable(expression.or[1]) &&
-    conjunction(expression.or[1])
+    isDisjunction(expression) &&
+    !isVariable(expression.or[1]) &&
+    isConjunction(expression.or[1])
   ) {
-    p = normalize(expression.or[0])
-    q = normalize(expression.or[1].and[0])
-    r = normalize(expression.or[1].and[1])
+    p = normalize(expression.or[0]);
+    q = normalize(expression.or[1].and[0]);
+    r = normalize(expression.or[1].and[1]);
     return {
-      and: [
-        normalize({or: [p, q]}),
-        normalize({or: [p, r]})
-      ]
-    }
+      and: [normalize({ or: [p, q] }), normalize({ or: [p, r] })]
+    };
 
-  // Simple statements pass through.
+    // Simple statements pass through.
   } else {
-    return expression
+    return expression;
   }
 }
 
-function conjunction (argument) {
-  return (
-    typeof argument === 'object' &&
-    'and' in argument
-  )
+function isConjunction(argument) {
+  return typeof argument === "object" && "and" in argument;
 }
 
-function disjunction (argument) {
-  return (
-    typeof argument === 'object' &&
-    'or' in argument
-  )
+function isDisjunction(argument) {
+  return typeof argument === "object" && "or" in argument;
 }
 
-function negation (argument) {
-  return (
-    typeof argument === 'object' &&
-    'not' in argument
-  )
+function isNegation(argument) {
+  return typeof argument === "object" && "not" in argument;
 }
 
-function variable (expression) {
+function isVariable(expression) {
   return (
-    !conjunction(expression) &&
-    !disjunction(expression) &&
-    !negation(expression)
-  )
+    !isConjunction(expression) &&
+    !isDisjunction(expression) &&
+    !isNegation(expression)
+  );
 }
