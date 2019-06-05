@@ -1,4 +1,5 @@
-var bifurcate = require("boolean-json-bifurcate");
+const bifurcate = require("boolean-json-bifurcate");
+const prune = require("boolean-json-prune");
 
 module.exports = function booleanJSONCNF(expression) {
   // Since boolean-json-schama@3.0.0, conjunctions and disjunctions can
@@ -16,7 +17,7 @@ module.exports = function booleanJSONCNF(expression) {
   //
   // For example, bifurcation converts `{ or: [ 'p', 'q', 'r' ] }`
   // to `{ or: [ 'p', { or: [ 'q', 'r' ] } ] }`.
-  return normalize(bifurcate(expression));
+  return prune(normalize(bifurcate(expression)));
 };
 
 function normalize(expression) {

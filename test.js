@@ -43,16 +43,16 @@ describe("The boolean-json-cnf library", () => {
   it("can resolve k-ary Conjunctions and Disjunctions", () => {
     // ¬(p ∨ q ∨ r)
     let result = cnf({ not: { or: ["p", "q", "r"] } });
-    // (¬p ∧ (¬q ∧ ¬r))
+    // (¬p ∧ ¬q ∧ ¬r)
     let expected = {
-      and: [{ not: "p" }, { and: [{ not: "q" }, { not: "r" }] }]
+      and: [{ not: "p" }, { not: "q" }, { not: "r" }]
     };
     expect(result).toEqual(expected);
 
     // ¬(p ∧ q ∧ r)
     result = cnf({ not: { and: ["p", "q", "r"] } });
-    // (¬p ∨ (¬q ∨ ¬r))
-    expected = { or: [{ not: "p" }, { or: [{ not: "q" }, { not: "r" }] }] };
+    // (¬p ∨ ¬q ∨ ¬r)
+    expected = { or: [{ not: "p" }, { not: "q" }, { not: "r" }] };
     expect(result).toEqual(expected);
   });
 });
